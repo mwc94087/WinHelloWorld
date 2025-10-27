@@ -10,6 +10,11 @@ struct StateInfo {
 	void* pointtothevoid;
 };
 
+inline StateInfo* GetStateInfo(HWND hwnd) {
+	LONG_PTR ptr = GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	return (StateInfo*)ptr;
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
@@ -63,6 +68,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
+	// Creating / initializing the window
+	case WM_CREATE:
+	{
+		// Get the custom struct
+		CREATESTRUCT* cStruct = (CREATESTRUCT*)lParam;
+		StateInfo* pState = (StateInfo*)cStruct->lpCreateParams;
+
+		// Put the custom struct into the window
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) pState);
+	}
 	// Painting the window
 	case WM_PAINT:
 	{
@@ -73,11 +88,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	}
 	return 0;
 
-	// User requesting to close the window
-	case WM_CLOSE:
-		if (MessageBox(hwnd, L"Close window?", L"Notice", MB_OKCANCEL) == IDOK) {
-			DestroyWindow(hwnd);
+	// Resizing the window
+	case WM_SIZE:
+		if (wParam == SIZE_MINIMIZED) {
+			StateInfo* pState = GetStateInfo(hwnd);
+
+			if (pState->cool == false) {
+				DestroyWindow(hwnd);
+			}
+			else {
+				pState->cool = false;
+			}
+
+			return 0;
+		} else {
+			return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		}
+
+	// Closing the window
+	case WM_CLOSE:
+		// BOOL doClose = (MessageBox(hwnd, L"Close window?", L"Notice", MB_OKCANCEL));
+
+		GetStateInfo(hwnd)->cool = true;
+		ShowWindow(hwnd, SW_MINIMIZE);
+		
 		return 0;
 
 	// Destroying the window
