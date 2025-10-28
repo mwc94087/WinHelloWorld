@@ -6,8 +6,8 @@
 const wchar_t CLASS_NAME[] = L"MyWindow65756756755675755667656";
 
 struct StateInfo {
-	bool cool;
-	void* pointtothevoid;
+	bool cool = false;
+	void* pointtothevoid = nullptr;
 };
 
 inline StateInfo* GetStateInfo(HWND hwnd) {
@@ -83,7 +83,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	{
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hwnd, &ps);
-		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_3DFACE + 1));
+		RECT rec = ps.rcPaint;
+		
+		FillRect(hdc, &rec, CreateSolidBrush(RGB(200, 200, 0)));
+
+		if (rec.bottom - rec.top > 4 && rec.right - rec.left > 4) {
+			rec.bottom -= 2;
+			rec.top += 2;
+			rec.right -= 2;
+			rec.left += 2;
+
+			FillRect(hdc, &rec, CreateSolidBrush(RGB(0, 200, 0)));
+		}
+
 		EndPaint(hwnd, &ps);
 	}
 	return 0;
