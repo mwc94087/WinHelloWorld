@@ -68,24 +68,28 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
-	// Creating / initializing the window
-	case WM_CREATE:
-	{
+		// Creating / initializing the window
+	case WM_CREATE: {
 		// Get the custom struct
 		CREATESTRUCT* cStruct = (CREATESTRUCT*)lParam;
 		StateInfo* pState = (StateInfo*)cStruct->lpCreateParams;
 
 		// Put the custom struct into the window
-		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) pState);
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pState);
 	}
-	// Painting the window
-	case WM_PAINT:
-	{
+
+		return 0;
+
+		// Painting the window
+	case WM_PAINT: {
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hwnd, &ps);
 		RECT rec = ps.rcPaint;
-		
-		FillRect(hdc, &rec, CreateSolidBrush(RGB(200, 200, 0)));
+
+		HBRUSH greenBrush = CreateSolidBrush(RGB(0, 200, 0));
+		HBRUSH yellowBrush = CreateSolidBrush(RGB(200, 200, 0));
+
+		FillRect(hdc, &rec, yellowBrush);
 
 		if (rec.bottom - rec.top > 4 && rec.right - rec.left > 4) {
 			rec.bottom -= 2;
@@ -93,45 +97,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 			rec.right -= 2;
 			rec.left += 2;
 
-			FillRect(hdc, &rec, CreateSolidBrush(RGB(0, 200, 0)));
+			FillRect(hdc, &rec, greenBrush);
 		}
+
+		DeleteObject(yellowBrush);
+		DeleteObject(greenBrush);
 
 		EndPaint(hwnd, &ps);
 	}
-	return 0;
 
-	// Resizing the window
-	case WM_SIZE:
-		if (wParam == SIZE_MINIMIZED) {
-			StateInfo* pState = GetStateInfo(hwnd);
-
-			if (pState->cool == false) {
-				DestroyWindow(hwnd);
-			}
-			else {
-				pState->cool = false;
-			}
-
-			return 0;
-		} else {
-			return DefWindowProc(hwnd, uMsg, wParam, lParam);
-		}
-
-	// Closing the window
-	case WM_CLOSE:
-		// BOOL doClose = (MessageBox(hwnd, L"Close window?", L"Notice", MB_OKCANCEL));
-
-		GetStateInfo(hwnd)->cool = true;
-		ShowWindow(hwnd, SW_MINIMIZE);
-		
 		return 0;
 
-	// Destroying the window
+		// Closing the window
+	case WM_CLOSE:
+
+		DestroyWindow(hwnd);
+
+		return 0;
+
+		// Destroying the window
 	case WM_DESTROY:
 		PostQuitMessage(0);
+
 		return 0;
 
-	// Anything else
+		// Anything else
 	default:
 		return DefWindowProc(hwnd, uMsg, wParam, lParam); // why is w before l wtf
 	}
